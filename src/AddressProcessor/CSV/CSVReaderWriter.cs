@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 
 namespace AddressProcessing.CSV
 {
@@ -8,134 +9,75 @@ namespace AddressProcessing.CSV
            Assume this code is in production and backwards compatibility must be maintained.
     */
 
-    public class CSVReaderWriter
+    public class CSVReaderWriter : ICSVReaderWriter, IDisposable
     {
-        private StreamReader _readerStream = null;
         private StreamWriter _writerStream = null;
 
         [Flags]
-        public enum Mode { Read = 1, Write = 2 };
+        public enum Mode { Read = 1, Create = 2 };
 
-        public void Open(string fileName, Mode mode)
+        public bool Open(string fileName, Mode mode)
         {
-            if (mode == Mode.Read)
+            try
+            { 
+            switch (mode)
             {
-                _readerStream = File.OpenText(fileName);
+                case Mode.Read:
+                    File.OpenText(fileName);
+                    return true;
+                case Mode.Create:
+                    using(_writerStream=new StreamWriter(fileName,true)) { 
+                        _writerStream.WriteLine();
+                    }
+                    return true;
+                default:
+                        return false;
             }
-            else if (mode == Mode.Write)
-            {
-                FileInfo fileInfo = new FileInfo(fileName);
-                _writerStream = fileInfo.CreateText();
             }
-            else
+            catch(ApplicationException ex)
             {
-                throw new Exception("Unknown file mode for " + fileName);
+                throw new Exception($"Unknown file mode for {fileName} {ex.Message}");
             }
         }
 
-        public void Write(params string[] columns)
+        public void Write(string fileName,params string[] columns)
         {
-            string outPut = "";
-
-            for (int i = 0; i < columns.Length; i++)
+            using (_writerStream = new StreamWriter(fileName, true))
             {
-                outPut += columns[i];
-                if ((columns.Length - 1) != i)
+                var i = 0;
+                StringBuilder sb = new StringBuilder();
+                foreach (string column in columns)
                 {
-                    outPut += "\t";
+                    sb.Append(column);
+                    if (i++ < columns.Length - 1) { sb.Append("\t"); }
                 }
+                _writerStream.WriteLine(sb);
             }
-
-            WriteLine(outPut);
         }
 
-        public bool Read(string column1, string column2)
+        public bool Read(out string column1, out string column2,string path)
         {
-            const int FIRST_COLUMN = 0;
-            const int SECOND_COLUMN = 1;
-
-            string line;
-            string[] columns;
-
-            char[] separator = { '\t' };
-
-            line = ReadLine();
-            columns = line.Split(separator);
-
-            if (columns.Length == 0)
-            {
-                column1 = null;
-                column2 = null;
-
-                return false;
-            }
+            using (var reader = new StreamReader(path))
+            { 
+            const int FIRST_COLUMN = 0, SECOND_COLUMN = 1;
+            string line=reader.ReadLine();
+            if (string.IsNullOrEmpty(line)||string.IsNullOrWhiteSpace(line))
+            { column1 = column2 = null; return false; }
             else
             {
+                string[] columns = line.Split('\t');
                 column1 = columns[FIRST_COLUMN];
                 column2 = columns[SECOND_COLUMN];
-
                 return true;
             }
+            };
         }
 
-        public bool Read(out string column1, out string column2)
-        {
-            const int FIRST_COLUMN = 0;
-            const int SECOND_COLUMN = 1;
-
-            string line;
-            string[] columns;
-
-            char[] separator = { '\t' };
-
-            line = ReadLine();
-
-            if (line == null)
-            {
-                column1 = null;
-                column2 = null;
-
-                return false;
-            }
-
-            columns = line.Split(separator);
-
-            if (columns.Length == 0)
-            {
-                column1 = null;
-                column2 = null;
-
-                return false;
-            } 
-            else
-            {
-                column1 = columns[FIRST_COLUMN];
-                column2 = columns[SECOND_COLUMN];
-
-                return true;
-            }
-        }
-
-        private void WriteLine(string line)
-        {
-            _writerStream.WriteLine(line);
-        }
-
-        private string ReadLine()
-        {
-            return _readerStream.ReadLine();
-        }
-
-        public void Close()
+        public void Dispose()
         {
             if (_writerStream != null)
             {
-                _writerStream.Close();
-            }
-
-            if (_readerStream != null)
-            {
-                _readerStream.Close();
+                _writerStream.Dispose();
             }
         }
     }
