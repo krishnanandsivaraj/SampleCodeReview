@@ -17,16 +17,14 @@ namespace AddressProcessing.Address
         public void Process(string inputFile)
         {
             var reader = new CSVReaderWriter();
-            reader.Open(inputFile, CSVReaderWriter.Mode.Read);
-
             string column1, column2;
 
-            while(reader.Read(out column1, out column2))
+            while(reader.Read(out column1, out column2,inputFile))
             {
                 _mailShot.SendMailShot(column1, column2);
+                return;
             }
-
-            reader.Close();
+            
         }
     }
 }

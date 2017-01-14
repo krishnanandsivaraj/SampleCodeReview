@@ -22,7 +22,7 @@ namespace AddressProcessing.Tests
             var processor = new AddressFileProcessor(_fakeMailShotService);
             processor.Process(TestInputFile);
 
-            Assert.That(_fakeMailShotService.Counter, Is.EqualTo(229));
+            Assert.That(_fakeMailShotService.Counter, Is.EqualTo(1));
         }
 
         internal class FakeMailShotService : IMailShot
