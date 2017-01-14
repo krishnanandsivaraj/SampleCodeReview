@@ -7,8 +7,7 @@ namespace AddressProcessing.CSV
         *) On opening/writing a stream from/to an external file, we have to use 'using' keyword. In this way, we can avoid closing our file readers through code.
         *) Use of 'switch' instead of multiple if else
         *) Exception should be logged with try catch.  Application exceptions can be created for this scenario.  In this scenario the exception is thrown but connection remains open. In finally close the connection or use try catch
-        *) FIRST_COLUMN and SECOND_COLUMN should be enum
-        *) Use string interpolation (c# 7.0) "Unknown file mode for ",filename -> $"Unknown file mode for {filename}"
+        *) Use string interpolation (c# 7.0) "Unknown file mode for {0}",filename -> $"Unknown file mode for {filename}"
         *) In method Read, for can be converted to foreach. Jon Skeet in stackoverflow says foreach is now faster than for loops and takes less code. http://tinyurl.com/jp4tpje
         *) WriteLine and ReadLine are functions but referenced once.  Maybe okay for any future use cases.
         *) Read method have common code that can be a function called inside both Read methods. Violates DRY.
