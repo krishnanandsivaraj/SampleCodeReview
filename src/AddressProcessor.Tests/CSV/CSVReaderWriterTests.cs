@@ -3,6 +3,7 @@ using AddressProcessing;
 using AddressProcessing.CSV;
 using System;
 using System.IO;
+using System.Text;
 
 namespace Csv.Tests
 {
@@ -26,7 +27,7 @@ namespace Csv.Tests
            bool result= iCsvReaderWriter.Open(@"c:\test\somesampletext.csv",CSVReaderWriter.Mode.Read);
             Assert.IsFalse(result);
         }
-
+            
         [Test]
         public void Creates_File_With_Write_Mode()
         {
@@ -58,6 +59,25 @@ namespace Csv.Tests
                     reader.Write(@"c:\test\someothertext2.csv","column1", "column2");
                     reader.Read(out column1,out column2, testCsvFileForWrite);
                     Assert.AreEqual("column1", column1);
+            };
+        }
+
+        [Test]
+        [ExpectedException(typeof(System.OutOfMemoryException))]
+        public void Write_Files_Max_Length()
+        {
+            StringBuilder sb = new StringBuilder(5000);
+            for (;;)
+            {
+                sb.Append("stuff");
+            }
+            string column1 = null, column2;
+            using (var reader = new CSVReaderWriter())
+            {
+
+                reader.Write(@"c:\test\someothertext2.csv",Convert.ToString(sb), "column2");
+                reader.Read(out column1, out column2, testCsvFileForWrite);
+                Assert.AreEqual(sb, column1);
             };
         }
 
